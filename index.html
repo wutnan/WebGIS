@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b36">
+  <title>ระบบสารสนเทศภูมิศาสตร์ท้องถิ่น</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/style.css?v=nan-layer-20261022">
+</head>
+<body>
+  <header class="topbar">
+    <button id="menu-toggle" class="icon-button menu-toggle" type="button" aria-label="เปิดหรือปิดเมนู" aria-expanded="false">☰</button>
+    <div class="brand-mark" aria-hidden="true">⌖</div>
+    <h1>ระบบสารสนเทศภูมิศาสตร์ท้องถิ่น</h1><span class="topbar-caption">LOCAL GIS</span>
+  </header>
+  <main class="workspace">
+    <aside id="sidebar" class="sidebar" aria-label="เครื่องมือแผนที่">
+      <section class="panel"><label for="search-input" class="section-title">ค้นหาข้อมูล</label><div class="search-row"><input id="search-input" type="search" placeholder="ชื่ออาคาร แปลง หรือโซน" autocomplete="off"><button id="search-button" class="primary-button" type="button">ค้นหา</button></div><div id="search-results" class="search-results" aria-live="polite"></div></section><section class="panel gis-import-panel"><h2 class="section-title">นำเข้าข้อมูล GIS</h2><p class="hint">เลือกไฟล์ .shp, .shx, .dbf และ .prj ชื่อชุดเดียวกัน หรือเลือก ZIP ที่บรรจุไฟล์ครบชุด</p><button id="gis-import-button" class="primary-button" type="button">นำเข้า GIS</button><input id="gis-file-input" type="file" accept=".shp,.shx,.dbf,.prj,.cpg,.zip" multiple hidden><p id="gis-import-status" class="hint gis-import-status" role="status" aria-live="polite">ไฟล์จะถูกอ่านใน Browser และไม่ถูกอัปโหลด</p><div class="gis-export-actions"><button id="export-selected-import" class="tool-button" type="button">Export Selected</button><button id="export-current-layer" class="tool-button" type="button">Export Layer</button><button id="export-all-imported" class="tool-button" type="button">Export All</button></div><div id="gis-imported-layers" class="gis-imported-layers"></div></section><section id="attribute-panel" class="panel attribute-panel" hidden><h2 class="section-title">ตารางข้อมูล (Attribute Table)</h2><label class="attribute-layer-label" for="attribute-layer-select">Layer</label><select id="attribute-layer-select" class="attribute-layer-select"></select><div id="attribute-summary" class="hint attribute-summary"></div><div class="attribute-table-wrap"><table class="attribute-table"><thead id="attribute-head"></thead><tbody id="attribute-body"></tbody></table></div><div class="attribute-pagination"><button id="attribute-prev" class="tool-button" type="button">ก่อนหน้า</button><span id="attribute-page" class="hint"></span><button id="attribute-next" class="tool-button" type="button">ถัดไป</button></div></section>
+      <section class="panel"><h2 class="section-title">เครื่องมือแผนที่</h2><div class="tool-grid"><button id="zoom-in" class="tool-button" type="button"><span>＋</span> ซูมเข้า</button><button id="zoom-out" class="tool-button" type="button"><span>－</span> ซูมออก</button><button id="home-button" class="tool-button" type="button"><span>⌂</span> ตำแหน่งเริ่มต้น</button><button id="fullscreen-button" class="tool-button" type="button"><span>⛶</span> เต็มหน้าจอ</button></div></section>
+      <section class="panel"><h2 class="section-title">วัดบนแผนที่</h2><div class="tool-grid"><button id="distance-button" class="tool-button measure-button" type="button"><span>↔</span> วัดระยะทาง</button><button id="area-button" class="tool-button measure-button" type="button"><span>▱</span> วัดพื้นที่</button></div><p id="measure-status" class="hint">เลือกเครื่องมือแล้วคลิกจุดบนแผนที่ ดับเบิลคลิกเพื่อจบ</p><button id="clear-measure" class="text-button" type="button">ล้างผลการวัด</button></section>
+      <section class="panel spatial-analysis-panel">
+        <h2 class="section-title">🔬 Spatial Analysis</h2>
+        <label class="analysis-label" for="analysis-type">Analysis Type</label>
+        <select id="analysis-type" class="analysis-select">
+          <option value="point-in-polygon">Point in Polygon</option>
+          <option value="within">Select by Location / Within</option>
+          <option value="intersect">Intersect</option>
+          <option value="buffer">Buffer</option>
+          <option value="centroid-within">Centroid Within Polygon</option>
+          <option value="distance">Distance</option>
+        </select>
+        <label class="analysis-label" for="analysis-source">Source Layer</label>
+        <select id="analysis-source" class="analysis-select"></select>
+        <label class="analysis-label" for="analysis-target">Target Layer</label>
+        <select id="analysis-target" class="analysis-select"></select>
+        <div id="analysis-distance-method-row" class="analysis-distance-method-row" hidden><label class="analysis-label" for="analysis-distance-method">Distance Method</label><select id="analysis-distance-method" class="analysis-select"><option value="centroid">Centroid to Centroid</option><option value="nearest">Nearest Distance</option></select></div>
+        <div id="analysis-feature-pair" class="analysis-feature-pair" hidden>
+          <label class="analysis-label" for="analysis-source-feature">Source Feature</label>
+          <select id="analysis-source-feature" class="analysis-select"></select>
+          <label class="analysis-label" for="analysis-target-feature">Target Feature</label>
+          <select id="analysis-target-feature" class="analysis-select"></select>
+        </div>
+        <div id="analysis-buffer-row" class="analysis-buffer-row" hidden>
+          <label class="analysis-label" for="analysis-buffer-distance">Buffer Distance</label>
+          <div class="analysis-input-group"><input id="analysis-buffer-distance" class="analysis-input" type="number" min="0.01" step="1" value="100"><select id="analysis-buffer-unit" class="analysis-select"><option value="meters">เมตร</option><option value="kilometers">กิโลเมตร</option></select></div>
+        </div>
+        <p class="hint analysis-crs-note">คำนวณบน WGS84 ด้วย Turf.js แบบ geodesic ไม่ใช้ค่าองศาเป็นเมตรโดยตรง</p><p id="analysis-crs-warning" class="analysis-warning" hidden></p>
+        <p class="hint">Nearest Distance ใช้จุดยอดและเส้นขอบที่ฉายใกล้ที่สุดตาม Turf.js; สำหรับเส้น/พื้นที่ซับซ้อนอาจเป็นค่าประมาณ ไม่ใช่ geodesic shortest path แบบ exact</p>
+        <div class="analysis-actions">
+          <button id="analysis-run" class="primary-button" type="button">▶ วิเคราะห์</button>
+          <button id="analysis-clear" class="tool-button" type="button">ล้างผลการวิเคราะห์</button>
+          <button id="analysis-zoom" class="tool-button" type="button">Zoom Result</button><button id="analysis-export" class="tool-button" type="button" disabled>Export Result GeoJSON</button>
+        </div>
+        <label class="analysis-label" for="analysis-result-select">Result Layer</label>
+        <select id="analysis-result-select" class="analysis-select"></select>
+        <div id="analysis-summary" class="hint analysis-summary" aria-live="polite">ยังไม่มีผลการวิเคราะห์</div>
+        <h3 class="analysis-subtitle">📊 Analysis Result</h3>
+        <div class="analysis-result-panel">
+          <div><span>Analysis Type</span><strong id="analysis-result-type">—</strong></div>
+          <div><span>Source Layer</span><strong id="analysis-result-source">—</strong></div>
+          <div><span>Target Layer</span><strong id="analysis-result-target">—</strong></div>
+          <div><span>Result Layer</span><strong id="analysis-result-name">—</strong></div>
+          <div><span>Feature Count</span><strong id="analysis-result-count">—</strong></div>
+          <div><span>Result Count</span><strong id="analysis-result-result-count">—</strong></div>
+          <div><span>Area</span><strong id="analysis-result-area">—</strong></div>
+          <div><span>Length</span><strong id="analysis-result-length">—</strong></div>
+          <div><span>Distance</span><strong id="analysis-result-distance">—</strong></div>
+          <div><span>Buffer Distance</span><strong id="analysis-result-buffer">—</strong></div>
+          <div><span>Analysis Date/Time</span><strong id="analysis-result-datetime">—</strong></div>
+        </div>
+        <div id="analysis-results" class="analysis-results"></div>
+      </section>
+      <section class="panel"><h2 class="section-title">ชั้นข้อมูลและแผนที่</h2><div id="layer-control" class="layer-control"></div></section>
+      <section class="panel"><h2 class="section-title">คำอธิบายสัญลักษณ์</h2><ul class="legend-list"><li><i class="legend-swatch boundary"></i> ขอบเขตพื้นที่</li><li><i class="legend-swatch building"></i> อาคาร</li><li><i class="legend-swatch parcel"></i> แปลงที่ดิน</li><li><i class="legend-swatch zone"></i> เขตการใช้ประโยชน์</li></ul></section>
+      <section class="panel"><h2 class="section-title">ส่งออกข้อมูล</h2><p class="hint">คลิกฟีเจอร์บนแผนที่เพื่อเลือก แล้วส่งออกเป็น GeoJSON</p><button id="export-button" class="primary-button export-button" type="button" disabled>ส่งออกฟีเจอร์ที่เลือก</button><div id="selection-status" class="hint" aria-live="polite">ยังไม่ได้เลือกฟีเจอร์</div></section>
+      <footer class="sidebar-footer">แผนที่พื้นฐาน © OpenStreetMap contributors</footer>
+    </aside>
+    <section class="map-wrap" aria-label="แผนที่"><div id="map" role="application" aria-label="แผนที่ข้อมูลภูมิศาสตร์ท้องถิ่น"></div><div class="coordinate-readout"><span class="coordinate-dot"></span><span id="coordinates">ละติจูด — · ลองจิจูด —</span></div><div id="map-message" class="map-message" role="status"></div><div id="mobile-scrim" class="mobile-scrim"></div></section>
+  </main>
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/shpjs@6.2.0/dist/shp.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/proj4@2.20.9/dist/proj4.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/app.js?v=nan-layer-20261022" defer></script>
+  <script src="js/import.js?v=nan-layer-20261022" defer></script>
+  <script src="js/analysis.js?v=nan-layer-20261022" defer></script>
+</body>
+</html>
