@@ -1,0 +1,20 @@
+npx http-server -p 8000
+
+https://account.heigit.org/verification
+user : wutnongkan@gmail.com
+PW : @WBoklua2515
+
+ขั้นตอนขอ API Key
+1. เข้าเว็บไซต์ OpenRouteService.  (https://openrouteservice.org/?utm_source=chatgpt.com)
+2. สมัครสมาชิก (Sign Up) ด้วยอีเมล
+3. ยืนยันอีเมลที่ได้รับ
+4. เข้าสู่ระบบที่ เข้าสู่ระบบ OpenRouteService.
+5. เข้า Dashboard แล้วเลือกเมนู API Key
+6. คัดลอกค่า Basic Key เก็บไว้ใช้ในระบบ Web GIS 
+   openrouteservice+1
+usser : wutnongkan@gmail.com
+pw : HYxuHGe7QH4cm3e
+eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjU0YWI5ODM1M2NjZTQyYTdhZTY0MDA3Nzk3OWMyOTNlIiwiaCI6Im11cm11cjY0In0=
+
+Google Drive API Key
+957891355004-0qt9ijegjnjalljbbki51fbibg5smpj9.apps.googleusercontent.com
