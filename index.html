@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b36">
+  <title>ระบบสารสนเทศภูมิศาสตร์ท้องถิ่น</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/style.css?v=route-info-label-20261112">
+</head>
+<body>
+  <section id="login-screen" class="login-screen" aria-labelledby="login-title">
+    <div class="login-card">
+      <div class="login-mark" aria-hidden="true">⌖</div>
+      <p class="login-eyebrow">LOCAL GIS</p>
+      <h1 id="login-title">เข้าสู่ระบบ</h1>
+      <p class="login-intro">กรุณาเข้าสู่ระบบเพื่อใช้งาน Web GIS</p>
+      <form id="login-form" novalidate>
+        <label class="login-label" for="login-username">Username</label>
+        <input id="login-username" class="login-input" name="username" type="text" autocomplete="username" required>
+        <label class="login-label" for="login-password">Password</label>
+        <div class="password-field">
+          <input id="login-password" class="login-input" name="password" type="password" autocomplete="current-password" required>
+          <button id="toggle-password" class="password-toggle" type="button" aria-label="แสดงรหัสผ่าน" aria-pressed="false">แสดง</button>
+        </div>
+        <p id="login-message" class="login-message" role="alert" aria-live="polite"></p>
+        <button id="login-submit" class="login-submit" type="submit">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </section>
+  <div id="gis-app" hidden>
+  <header class="topbar">
+    <button id="menu-toggle" class="icon-button menu-toggle" type="button" aria-label="เปิดหรือปิดเมนู" aria-expanded="false">☰</button>
+    <div class="brand-mark" aria-hidden="true">⌖</div>
+    <h1>ระบบสารสนเทศภูมิศาสตร์ท้องถิ่น</h1><span class="topbar-caption">LOCAL GIS</span><button id="logout-button" class="logout-button" type="button">ออกจากระบบ</button>
+  </header>
+  <main class="workspace">
+    <aside id="sidebar" class="sidebar" aria-label="เครื่องมือแผนที่">
+      <section class="panel"><label for="search-input" class="section-title">ค้นหาข้อมูล</label><div class="search-row"><input id="search-input" type="search" placeholder="ชื่ออาคาร แปลง หรือโซน" autocomplete="off"><button id="search-button" class="primary-button" type="button">ค้นหา</button></div><div id="search-results" class="search-results" aria-live="polite"></div></section><section class="panel gis-import-panel"><h2 class="section-title">นำเข้าข้อมูล GIS</h2><p class="hint">เลือกไฟล์ .shp, .shx, .dbf และ .prj ชื่อชุดเดียวกัน หรือเลือก ZIP ที่บรรจุไฟล์ครบชุด</p><button id="gis-import-button" class="primary-button" type="button">นำเข้า GIS</button><input id="gis-file-input" type="file" accept=".shp,.shx,.dbf,.prj,.cpg,.zip" multiple hidden><p id="gis-import-status" class="hint gis-import-status" role="status" aria-live="polite">ไฟล์จะถูกอ่านใน Browser และไม่ถูกอัปโหลด</p><div class="gis-export-actions"><button id="export-selected-import" class="tool-button" type="button">Export Selected</button><button id="export-current-layer" class="tool-button" type="button">Export Layer</button><button id="export-all-imported" class="tool-button" type="button">Export All</button></div><div id="gis-imported-layers" class="gis-imported-layers"></div></section><section id="attribute-panel" class="panel attribute-panel" hidden><h2 class="section-title">ตารางข้อมูล (Attribute Table)</h2><label class="attribute-layer-label" for="attribute-layer-select">Layer</label><select id="attribute-layer-select" class="attribute-layer-select"></select><div id="attribute-summary" class="hint attribute-summary"></div><div class="attribute-table-wrap"><table class="attribute-table"><thead id="attribute-head"></thead><tbody id="attribute-body"></tbody></table></div><div class="attribute-pagination"><button id="attribute-prev" class="tool-button" type="button">ก่อนหน้า</button><span id="attribute-page" class="hint"></span><button id="attribute-next" class="tool-button" type="button">ถัดไป</button></div></section>
+      <section class="panel"><h2 class="section-title">เครื่องมือแผนที่</h2><div class="tool-grid"><button id="zoom-in" class="tool-button" type="button"><span>＋</span> ซูมเข้า</button><button id="zoom-out" class="tool-button" type="button"><span>－</span> ซูมออก</button><button id="home-button" class="tool-button" type="button"><span>⌂</span> ตำแหน่งเริ่มต้น</button><button id="fullscreen-button" class="tool-button" type="button"><span>⛶</span> เต็มหน้าจอ</button></div></section>
+      <section class="panel"><h2 class="section-title">วัดบนแผนที่</h2><div class="tool-grid"><button id="distance-button" class="tool-button measure-button" type="button"><span>↔</span> วัดระยะทาง</button><button id="area-button" class="tool-button measure-button" type="button"><span>▱</span> วัดพื้นที่</button></div><p id="measure-status" class="hint">เลือกเครื่องมือแล้วคลิกจุดบนแผนที่ ดับเบิลคลิกเพื่อจบ</p><button id="clear-measure" class="text-button" type="button">ล้างผลการวัด</button></section>
+      <section class="panel spatial-analysis-panel">
+        <h2 class="section-title">🔬 Spatial Analysis</h2>
+        <div class="feature-search-panel">
+          <h3 class="analysis-subtitle">ค้นหา Feature บ้าน</h3>
+          <label class="analysis-label" for="feature-search-hse">hse_no (เลขที่บ้าน)</label>
+          <input id="feature-search-hse" class="analysis-input" type="search" autocomplete="off">
+          <label class="analysis-label" for="feature-search-moo">moo (หมู่ที่)</label>
+          <input id="feature-search-moo" class="analysis-input" type="search" autocomplete="off">
+          <p id="feature-search-fields" class="hint" aria-live="polite"></p>
+          <div class="analysis-actions"><button id="feature-search-run" class="primary-button" type="button">ค้นหา</button><button id="feature-search-clear" class="tool-button" type="button">ล้างเงื่อนไข</button><button id="feature-search-zoom" class="tool-button" type="button" disabled>Zoom to Result</button></div>
+          <div id="feature-search-summary" class="hint" aria-live="polite"></div>
+          <label class="analysis-label" for="route-profile">ประเภทการเดินทาง</label>
+          <select id="route-profile" class="analysis-select"><option value="walking" selected>เดินเท้า (Walking · OpenRouteService)</option><option value="driving">รถยนต์ (Driving · OSRM)</option></select>
+          <div class="analysis-actions"><button id="route-start" class="primary-button" type="button" disabled>นำทางไปบ้านที่เลือก</button><button id="route-zoom" class="tool-button" type="button" disabled>Zoom to Route</button><button id="route-clear" class="tool-button" type="button" disabled>ล้างเส้นทาง</button><button id="route-retry" class="tool-button" type="button" disabled>นำทางใหม่</button></div>
+          <div id="route-status" class="hint" role="status" aria-live="polite">ค้นหาและเลือกรายการบ้านก่อนเริ่มนำทาง</div>
+          <div id="route-coordinates" class="hint" aria-live="polite"></div><div id="route-details" class="hint" aria-live="polite"></div>
+          <div class="attribute-table-wrap"><table class="attribute-table"><thead><tr><th>ลำดับ</th><th>hse_no</th><th>moo</th><th>build_code</th><th>Geometry</th><th>Feature ID</th><th>นำทาง</th></tr></thead><tbody id="feature-search-results"></tbody></table></div>
+        </div>
+        <label class="analysis-label" for="analysis-type">Analysis Type</label>
+        <select id="analysis-type" class="analysis-select">
+          <option value="point-in-polygon">Point in Polygon</option>
+          <option value="within">Select by Location / Within</option>
+          <option value="intersect">Intersect</option>
+          <option value="buffer">Buffer</option>
+          <option value="centroid-within">Centroid Within Polygon</option>
+          <option value="distance">Distance</option>
+        </select>
+        <label class="analysis-label" for="analysis-source">Source Layer</label>
+        <select id="analysis-source" class="analysis-select"></select>
+        <label class="analysis-label" for="analysis-target">Target Layer</label>
+        <select id="analysis-target" class="analysis-select"></select>
+        <div id="analysis-distance-method-row" class="analysis-distance-method-row" hidden><label class="analysis-label" for="analysis-distance-method">Distance Method</label><select id="analysis-distance-method" class="analysis-select"><option value="centroid">Centroid to Centroid</option><option value="nearest">Nearest Distance</option></select></div>
+        <div id="analysis-feature-pair" class="analysis-feature-pair" hidden>
+          <label class="analysis-label" for="analysis-source-feature">Source Feature</label>
+          <input id="analysis-source-feature-search" class="analysis-input" type="search" aria-label="ค้นหา Source Feature ด้วยรหัสจาก Attribute Fields" placeholder="ค้นหาด้วยรหัส เช่น hse_no, build_code, P_parcel_c" autocomplete="off">
+          <p id="analysis-source-feature-count" class="hint analysis-source-feature-count"></p>
+          <select id="analysis-source-feature" class="analysis-select"></select>
+          <div class="analysis-source-feature-actions"><p id="analysis-source-feature-status" class="hint" aria-live="polite">ยังไม่ได้เลือก Source Feature</p><button id="analysis-zoom-source-feature" class="tool-button" type="button" disabled>Zoom to Source Feature</button></div>
+          <label class="analysis-label" for="analysis-target-feature">Target Feature</label>
+          <select id="analysis-target-feature" class="analysis-select"></select>
+        </div>
+        <div id="analysis-buffer-row" class="analysis-buffer-row" hidden>
+          <label class="analysis-label" for="analysis-buffer-distance">Buffer Distance</label>
+          <div class="analysis-input-group"><input id="analysis-buffer-distance" class="analysis-input" type="number" min="0.01" step="1" value="100"><select id="analysis-buffer-unit" class="analysis-select"><option value="meters">เมตร</option><option value="kilometers">กิโลเมตร</option></select></div>
+        </div>
+        <p class="hint analysis-crs-note">คำนวณบน WGS84 ด้วย Turf.js แบบ geodesic ไม่ใช้ค่าองศาเป็นเมตรโดยตรง</p><p id="analysis-crs-warning" class="analysis-warning" hidden></p>
+        <p class="hint">Nearest Distance ใช้จุดยอดและเส้นขอบที่ฉายใกล้ที่สุดตาม Turf.js; สำหรับเส้น/พื้นที่ซับซ้อนอาจเป็นค่าประมาณ ไม่ใช่ geodesic shortest path แบบ exact</p>
+        <div class="analysis-actions">
+          <button id="analysis-run" class="primary-button" type="button">▶ วิเคราะห์</button>
+          <button id="analysis-clear" class="tool-button" type="button">ล้างผลการวิเคราะห์</button>
+          <button id="analysis-zoom" class="tool-button" type="button">Zoom Result</button><button id="analysis-export" class="tool-button" type="button" disabled>Export Result GeoJSON</button>
+        </div>
+        <label class="analysis-label" for="analysis-result-select">Result Layer</label>
+        <select id="analysis-result-select" class="analysis-select"></select>
+        <div id="analysis-summary" class="hint analysis-summary" aria-live="polite">ยังไม่มีผลการวิเคราะห์</div>
+        <h3 class="analysis-subtitle">📊 Analysis Result</h3>
+        <div class="analysis-result-panel">
+          <div><span>Analysis Type</span><strong id="analysis-result-type">—</strong></div>
+          <div><span>Source Layer</span><strong id="analysis-result-source">—</strong></div>
+          <div><span>Target Layer</span><strong id="analysis-result-target">—</strong></div>
+          <div><span>Result Layer</span><strong id="analysis-result-name">—</strong></div>
+          <div><span>Feature Count</span><strong id="analysis-result-count">—</strong></div>
+          <div><span>Result Count</span><strong id="analysis-result-result-count">—</strong></div>
+          <div><span>Area</span><strong id="analysis-result-area">—</strong></div>
+          <div><span>Length</span><strong id="analysis-result-length">—</strong></div>
+          <div><span>Distance</span><strong id="analysis-result-distance">—</strong></div>
+          <div><span>Buffer Distance</span><strong id="analysis-result-buffer">—</strong></div>
+          <div><span>Analysis Date/Time</span><strong id="analysis-result-datetime">—</strong></div>
+        </div>
+        <div id="analysis-results" class="analysis-results"></div>
+      </section>
+      <section class="panel"><h2 class="section-title">ชั้นข้อมูลและแผนที่</h2><div id="layer-control" class="layer-control"></div></section>
+      <section class="panel"><h2 class="section-title">คำอธิบายสัญลักษณ์</h2><ul class="legend-list"><li><i class="legend-swatch boundary"></i> ขอบเขตพื้นที่</li><li><i class="legend-swatch building"></i> อาคาร</li><li><i class="legend-swatch parcel"></i> แปลงที่ดิน</li><li><i class="legend-swatch zone"></i> เขตการใช้ประโยชน์</li></ul></section>
+      <section class="panel"><h2 class="section-title">ส่งออกข้อมูล</h2><p class="hint">คลิกฟีเจอร์บนแผนที่เพื่อเลือก แล้วส่งออกเป็น GeoJSON</p><button id="export-button" class="primary-button export-button" type="button" disabled>ส่งออกฟีเจอร์ที่เลือก</button><div id="selection-status" class="hint" aria-live="polite">ยังไม่ได้เลือกฟีเจอร์</div></section>
+      <footer class="sidebar-footer">แผนที่พื้นฐาน © OpenStreetMap contributors</footer>
+    </aside>
+    <section class="map-wrap" aria-label="แผนที่"><div id="map" role="application" aria-label="แผนที่ข้อมูลภูมิศาสตร์ท้องถิ่น"></div><div class="coordinate-readout"><span class="coordinate-dot"></span><span id="coordinates">ละติจูด — · ลองจิจูด —</span></div><div id="map-message" class="map-message" role="status"></div><div id="mobile-scrim" class="mobile-scrim"></div></section>
+  </main>
+  </div>
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/shpjs@6.2.0/dist/shp.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/proj4@2.20.9/dist/proj4.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/photo-label.js?v=photo-label-address-20261123" defer></script>
+  <script src="js/app.js?v=photo-label-20261123" defer></script>
+  <script src="js/import.js?v=photo-label-20261123" defer></script>
+  <script src="js/analysis.js?v=ors-walking-key-20261120" defer></script>
+  <script>
+    (() => {
+      'use strict';
+      const ADMIN_USERNAME = 'admin';
+      const ADMIN_PASSWORD = "gmL[k]dv'8;kp";
+      const STORAGE_KEY = 'localgis.login-lock.v1';
+      const LOCK_DURATION = 5 * 60 * 1000;
+      const loginScreen = document.getElementById('login-screen');
+      const gisApp = document.getElementById('gis-app');
+      const form = document.getElementById('login-form');
+      const username = document.getElementById('login-username');
+      const password = document.getElementById('login-password');
+      const message = document.getElementById('login-message');
+      const submit = document.getElementById('login-submit');
+      const toggle = document.getElementById('toggle-password');
+      let failureState = { attempts: 0, lockedUntil: 0 };
+
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null');
+        if (saved && Number.isFinite(saved.attempts) && Number.isFinite(saved.lockedUntil)) failureState = saved;
+      } catch (_) { /* Continue with an in-memory lock if storage is unavailable. */ }
+
+      const saveFailureState = () => {
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(failureState)); } catch (_) { /* Keep the current tab state. */ }
+      };
+      const showMessage = (text) => { message.textContent = text; };
+      const lockRemaining = () => Math.max(0, failureState.lockedUntil - Date.now());
+      const updateLockMessage = () => {
+        const remaining = lockRemaining();
+        if (remaining <= 0) {
+          if (failureState.lockedUntil) { failureState = { attempts: 0, lockedUntil: 0 }; saveFailureState(); }
+          submit.disabled = false;
+          showMessage('');
+          return;
+        }
+        submit.disabled = true;
+        const seconds = Math.ceil(remaining / 1000);
+        showMessage(`เข้าสู่ระบบไม่ได้ชั่วคราว กรุณาลองใหม่ใน ${Math.floor(seconds / 60)} นาที ${seconds % 60} วินาที`);
+      };
+      const revealGIS = () => {
+        loginScreen.hidden = true;
+        gisApp.hidden = false;
+        window.dispatchEvent(new CustomEvent('localgis:authenticated'));
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+          window.LocalGIS?.map?.invalidateSize({ pan: false });
+        }));
+      };
+      updateLockMessage();
+      if (failureState.lockedUntil > Date.now()) window.setInterval(updateLockMessage, 1000);
+
+      toggle.addEventListener('click', () => {
+        const reveal = password.type === 'password';
+        password.type = reveal ? 'text' : 'password';
+        toggle.textContent = reveal ? 'ซ่อน' : 'แสดง';
+        toggle.setAttribute('aria-label', reveal ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+        toggle.setAttribute('aria-pressed', String(reveal));
+      });
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (lockRemaining() > 0) { updateLockMessage(); return; }
+        if (username.value === ADMIN_USERNAME && password.value === ADMIN_PASSWORD) {
+          failureState = { attempts: 0, lockedUntil: 0 };
+          saveFailureState();
+          password.value = '';
+          showMessage('');
+          revealGIS();
+          return;
+        }
+        failureState.attempts += 1;
+        if (failureState.attempts >= 5) failureState.lockedUntil = Date.now() + LOCK_DURATION;
+        saveFailureState();
+        password.value = '';
+        showMessage(failureState.lockedUntil > Date.now()
+          ? 'เข้าสู่ระบบไม่สำเร็จ กรอกข้อมูลผิดครบ 5 ครั้ง ระบบล็อกชั่วคราว 5 นาที'
+          : `ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (เหลือ ${5 - failureState.attempts} ครั้งก่อนล็อก)`);
+        if (failureState.lockedUntil > Date.now()) { submit.disabled = true; window.setInterval(updateLockMessage, 1000); }
+        password.focus();
+      });
+      document.getElementById('logout-button').addEventListener('click', () => {
+        gisApp.hidden = true;
+        loginScreen.hidden = false;
+        username.value = '';
+        password.value = '';
+        showMessage('ออกจากระบบแล้ว');
+        username.focus();
+      });
+    })();
+  </script>
+</body>
+</html>

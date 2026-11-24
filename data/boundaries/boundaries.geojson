@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "name": "local_boundaries",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "BND-001",
+        "name": "ขอบเขตชุมชนตัวอย่าง",
+        "type": "ขอบเขตชุมชน",
+        "area_km2": 0.42
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.493,
+              13.751
+            ],
+            [
+              100.512,
+              13.751
+            ],
+            [
+              100.516,
+              13.764
+            ],
+            [
+              100.505,
+              13.769
+            ],
+            [
+              100.491,
+              13.764
+            ],
+            [
+              100.493,
+              13.751
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
